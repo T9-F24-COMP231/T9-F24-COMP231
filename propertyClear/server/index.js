@@ -12,6 +12,10 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
+app.get('/notification', (req, res) => {
+  res.send('Im going to send an email');
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
