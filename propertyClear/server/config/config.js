@@ -1,16 +1,9 @@
-const config = { 
-    env: process.env.NODE_ENV || "development",
-    port: process.env.PORT || 3000,
-    jwtSecret: process.env.JWT_SECRET || "YOUR_secret_key",
-    mongoUri:
-      process.env.MONGODB_URI ||
-      "mongodb://0.0.0.0:27017/clearProperty" ||
-      process.env.MONGO_HOST ||
-      "mongodb://" +
-        (process.env.IP || "localhost") + 
-        ":" +
-        (process.env.MONGO_PORT || "27017") +
-        "/clearProperty",
-  };
-  export default config;
-  
+// config/config.js
+import dotenv from 'dotenv';
+dotenv.config();
+
+export default {
+  jwtSecret: process.env.JWT_SECRET,
+  propertiesDbUri: process.env.PROPERTIES_DB_URI,
+  liensDbUri: process.env.LIENS_DB_URI,
+};

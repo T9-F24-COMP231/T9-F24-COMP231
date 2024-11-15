@@ -1,0 +1,48 @@
+.header_component{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.header_component p{
+    margin: 0;
+}
+
+.title a{
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+
+}
+
+.title h3{
+    margin: 0;
+}
+
+.title a:hover{
+    color: blue;
+}
+
+.navigation{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.navigation a{
+    padding: 0 20px;
+    text-decoration: none;
+    color: black;
+    font-size: 17px;
+    transition: all .6s;
+}
+
+.navigation a:hover{
+    color: blue;
+}
+
+.footer_content{
+    display: flex;
+    justify-content: space-around;
+}

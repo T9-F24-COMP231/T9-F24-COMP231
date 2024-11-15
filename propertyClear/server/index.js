@@ -1,29 +1,63 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const userRoutes = require('./routes/user.routes.js'); // Ensure this is correctly required
+import express from 'express';
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import config from './config/config.js';
+import userRoutes from './routes/user.routes.js';
+import propertyRoutes from './routes/property.routes.js';
+import lienRoutes from './routes/lien.routes.js';
 
-dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 5001;
 
-const app = express(); // Initialize the app with express
-const PORT = process.env.PORT || 5000;
+// Middleware
+app.use(bodyParser.json());
+app.use(cookieParser());
 
-app.use(express.json()); // Middleware to parse JSON
-app.use('/api', userRoutes);
+// MongoDB Connections
+const connectDB = async () => {
+  try {
+    await mongoose.connect(config.propertiesDbUri, { useNewUrlParser: true, useUnifiedTopology: true });
+    console.log('Connected to Properties and User database');
+  } catch (err) {
+    console.error('Properties DB connection error:', err);
+  }
+};
+connectDB();
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/clearProperty", { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log("MongoDB connection error:", error));
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/liens', lienRoutes);
+app.use('/api/properties', propertyRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Server is running');
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.get('/notification', (req, res) => {
   res.send('Im going to send an email');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// import mongoose from 'mongoose';
+
+// const connectDatabases = async () => {
+//   try {
+//     // Connect to Properties Database
+//     await mongoose.connect(config.propertiesDbUri, {
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//     });
+//     console.log('Connected to Properties and User database');
+
+//     // Create a new Mongoose connection for the Liens Database
+//     const liensConnection = await mongoose.createConnection(config.liensDbUri, {
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//     });
+//     console.log('Connected to Liens database');
+
+//   } catch (err) {
+//     console.error('Database connection error:', err);
+//   }
+// };
+
+// connectDatabases();
