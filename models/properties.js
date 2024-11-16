@@ -1,5 +1,5 @@
 const { Schema } = require('mongoose');
-const propertiesDB = require('../config/propertiesDB'); // Use propertiesDB connection
+const propertiesDB = require('../config/propertiesDB');
 
 const propertySchema = new Schema({
   property_id: { type: String, required: true, unique: true },
@@ -12,8 +12,9 @@ const propertySchema = new Schema({
   propertyType: { type: String, required: true },
   sizeSqft: { type: Number, required: true },
   value: { type: Number, required: true },
-  purchase_price: { type: Number, required: true },  
+  purchase_price: { type: Number, required: true },
   purchase_date: { type: Date, default: Date.now },
+  taxes: { type: Number }, // Add taxes field
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

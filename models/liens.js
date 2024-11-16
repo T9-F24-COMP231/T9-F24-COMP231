@@ -13,6 +13,7 @@ const lienSchema = new Schema({
   lienDueDate: { type: Date, default: Date.now },
   date_filed: { type: Date, default: Date.now },
   lien_status: { type: String, default: 'Active' },
+  taxes: { type: Number }, // Add taxes field
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
