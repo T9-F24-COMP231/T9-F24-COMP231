@@ -2,13 +2,16 @@
   "name": "propertyclear",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "client": "npm start --prefix client",
-  "server": "nodemon server/index.js",
-  "dev": "concurrently \"npm run server\" \"npm run client\""
-},
+  "scripts": {
+    "client": "npm start --prefix client",
+    "server": "nodemon server/index.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
 }
