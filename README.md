@@ -21,3 +21,8 @@ PGUSER=neondb_owner
 PGDATABASE=neondb
 PGPASSWORD=Ger2eyhF
 ```
+
+
+To setup the app, make sure you cd into the server and ```npm install``` and then cd into the client and ```npm install``` also, then from the root dir, in one terminal you can run ```npm run client```, and in the other ```npm run server```, it should look like this:
+
+![image](https://github.com/user-attachments/assets/b7d25367-0696-40c9-a034-d2bf04c24b6c)
