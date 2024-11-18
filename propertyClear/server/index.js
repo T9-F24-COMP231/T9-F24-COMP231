@@ -5,11 +5,19 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import nodemailer from 'nodemailer';
+import cors from 'cors';  // Add this import
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Your React app's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(bodyParser.json());
 app.use(cookieParser());
 
@@ -23,6 +31,13 @@ app.get('/users', async (req, res) => {
   let users = await pool.query(`SELECT * FROM "User"`);
   console.log(users);
   res.json(users);
+});
+
+app.get('/properties', async (req, res) => {
+  const pool = await getPool();
+  let properties = await pool.query(`SELECT * FROM "Propertie"`);
+  console.log(properties);
+  res.json(properties.rows);
 });
 
 app.get('/notification', (req, res) => {
