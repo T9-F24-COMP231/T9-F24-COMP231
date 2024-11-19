@@ -35,9 +35,43 @@ app.get('/users', async (req, res) => {
 
 app.get('/properties', async (req, res) => {
   const pool = await getPool();
-  let properties = await pool.query(`SELECT * FROM "Propertie"`);
+  let properties = await pool.query(`
+    SELECT * FROM "Propertie"
+    `);
   console.log(properties);
   res.json(properties.rows);
+});
+
+// propertiesSecure - is ONLY FOR REAL ESTATE AGENT, INVESTOR AND BROCKER
+
+app.get('/propertiesSecure', async (req, res) => {
+  const pool = await getPool();
+  let properties = await pool.query(`
+    SELECT 
+    p.*,
+    json_agg(
+        json_build_object(
+            'tax_id', t._id,
+            'property_id', t.property_id,
+            'finalLevies', t.finalLevies,
+            'lessInterimBilling', t.lessInterimBilling,
+            'totalAmountDue', t.totalAmountDue,
+            'dueDate', t.dueDate
+        )
+    ) AS taxinfo
+FROM "Propertie" p
+LEFT JOIN "Taxe" t ON t.property_id = p._id
+GROUP BY p._id
+    `);
+  console.log(properties);
+  res.json(properties.rows);
+});
+
+app.get('/taxes', async (req, res) =>{
+  const pool = await getPool();
+  let taxes = await pool.query('SELECT * FROM "Taxe"');
+  console.log(taxes);
+  res.json(taxes.rows);
 });
 
 app.get('/notification', (req, res) => {
