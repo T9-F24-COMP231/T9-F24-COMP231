@@ -26,6 +26,120 @@ app.get('/', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
+
+app.get('/properties/:id/history', async (req, res) => {
+  const pool = await getPool();
+  const propertyId = req.params.id;
+  try {
+    // Query to get liens and mortgages for the given property
+    const history = await pool.query(`
+      SELECT 
+          p.address,
+          json_agg(
+              json_build_object(
+                  'date', l->>'date',
+                  'type', l->>'type',
+                  'amount', l->>'amount',
+                  'partyTo', l->>'partyTo',
+                  'partyFrom', l->>'partyFrom'
+              )
+          ) AS liens,
+          json_agg(
+              json_build_object(
+                  'amount', m->>'amount',
+                  'lender', m->>'lender',
+                  'startDate', m->>'startDate',
+                  'endDate', m->>'endDate',
+                  'interestRate', m->>'interestRate'
+              )
+          ) AS mortgages
+      FROM "Propertie" p
+      LEFT JOIN json_array_elements(p.liens::json) l ON true
+      LEFT JOIN json_array_elements(p.mortgages::json) m ON true
+      WHERE p._id = $1
+      GROUP BY p.address;
+    `, [propertyId]);
+
+    if (history.rows.length === 0) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    res.json(history.rows[0]);
+  } catch (error) {
+    console.error('Error fetching property history:', error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+app.get('/investor/:id/risks', async (req, res) => {
+  const pool = await getPool();
+  const userId = req.params.id; 
+
+  try {
+    // Fetch the user's role and associated properties
+    const userResult = await pool.query(`
+      SELECT u.role, u.associatedproperties, r.role AS rolename
+      FROM "User" u
+      JOIN "Role" r ON r._id = u.role
+      WHERE u._id = $1;
+    `, [userId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = userResult.rows[0];
+
+    if (user.role !== 2) {
+      return res.status(403).json({ error: "Access denied. Only investors can view this data." });
+    }
+
+    const associatedProperties = user.associatedproperties ? user.associatedproperties : [];
+    if (associatedProperties.length === 0) {
+      return res.status(200).json({ risks: [], message: "No associated properties found." });
+    }
+
+    const risksResult = await pool.query(`
+      SELECT 
+          p._id AS property_id,
+          p.address,
+          json_agg(
+              json_build_object(
+                  'date', l->>'date',
+                  'type', l->>'type',
+                  'amount', l->>'amount',
+                  'partyTo', l->>'partyTo',
+                  'partyFrom', l->>'partyFrom'
+              )
+          ) AS liens,
+          t.finallevies,
+          t.lessinterimbilling,
+          t.totalamountdue,
+          t.duedate
+      FROM "Propertie" p
+      LEFT JOIN json_array_elements(p.liens::json) l ON true
+      LEFT JOIN "Taxe" t ON t.property_id = p._id
+      WHERE p._id = ANY($1)
+      GROUP BY p._id, t.finallevies, t.lessinterimbilling, t.totalamountdue, t.duedate;
+    `, [associatedProperties]);
+
+    res.json({
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.rolename,
+      },
+      risks: risksResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching investor risks:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
 app.get('/users', async (req, res) => {
   const pool = await getPool();
   let users = await pool.query(`SELECT * FROM "User"`);
