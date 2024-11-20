@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import Main from './components/Main';
 import Agent from './components/AgentDash';
 import Investor from './components/InvestorDash';
+import Owner from './components/HomeOwnerDash';
 
 function App() {
   const isAuthenticated = true;
@@ -21,6 +22,7 @@ function App() {
           <Route exact path="/" element={<Main />}></Route>
           {isAuthenticated && (
             <>
+              <Route path='/owner' element={<Owner />} />
               <Route path="/realEstate" element={<Agent />} />
               <Route path="/investor" element={<Investor />} />
             </>

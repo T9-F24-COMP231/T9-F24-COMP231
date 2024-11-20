@@ -67,6 +67,42 @@ GROUP BY p._id
   res.json(properties.rows);
 });
 
+app.get('/propertiesSecure/:userId', async (req, res) => {
+  const { userId } = req.params; // Extract userId from the request parameters
+  const pool = await getPool();
+
+  try {
+    let properties = await pool.query(`
+      SELECT 
+        p.*,
+        json_agg(
+            json_build_object(
+                'tax_id', t._id,
+                'property_id', t.property_id,
+                'finalLevies', t.finalLevies,
+                'lessInterimBilling', t.lessInterimBilling,
+                'totalAmountDue', t.totalAmountDue,
+                'dueDate', t.dueDate
+            )
+        ) AS taxinfo
+      FROM "Propertie" p
+      LEFT JOIN "Taxe" t ON t.property_id = p._id
+      WHERE p.owner_id = $1
+      GROUP BY p._id
+    `, [userId]); // Pass userId as a parameter to avoid SQL injection
+
+    if (properties.rows.length === 0) {
+      return res.status(404).json({ message: 'Property not found for this user' });
+    }
+
+    res.json(properties.rows[0]); // Send the first property as response
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    res.status(500).json({ message: 'Error fetching property', error });
+  }
+});
+
+
 app.get('/taxes', async (req, res) =>{
   const pool = await getPool();
   let taxes = await pool.query('SELECT * FROM "Taxe"');
