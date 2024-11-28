@@ -5,10 +5,17 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import nodemailer from 'nodemailer';
-import cors from 'cors';  // Add this import
+import cors from 'cors';
+
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+
+
+
 
 // Middleware
 
@@ -20,6 +27,24 @@ app.use(cors({
 
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+// Define the authenticateToken middleware
+const authenticateToken = (req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1]; // Extract token from "Bearer {token}"
+  if (!token) return res.status(401).json({ message: "Access denied, no token provided" });
+
+  try {
+      const decoded = jwt.verify(token, "your-secret-key");
+      req.user = decoded; // Attach decoded token to the request
+      next(); // Proceed to the next middleware or route handler
+  } catch (error) {
+      res.status(403).json({ message: "Invalid or expired token" });
+  }
+};
+
+app.get('/secure-endpoint', authenticateToken, (req, res) => {
+  res.status(200).json({ message: `Hello user with ID ${req.user.id}` });
+});
 
 // Basic test route
 app.get('/', (req, res) => {
@@ -67,40 +92,53 @@ GROUP BY p._id
   res.json(properties.rows);
 });
 
-app.get('/propertiesSecure/:userId', async (req, res) => {
-  const { userId } = req.params; // Extract userId from the request parameters
-  const pool = await getPool();
+app.get('/propertiesSecure/owner', async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized access" });
+  }
 
   try {
-    let properties = await pool.query(`
+    const decoded = jwt.verify(token, "your-secret-key");
+    const userId = decoded.id; // Assuming the token contains `id` for the user
+    const pool = await getPool();
+
+    const query = `
       SELECT 
         p.*,
-        json_agg(
-            json_build_object(
-                'tax_id', t._id,
-                'property_id', t.property_id,
-                'finalLevies', t.finalLevies,
-                'lessInterimBilling', t.lessInterimBilling,
-                'totalAmountDue', t.totalAmountDue,
-                'dueDate', t.dueDate
-            )
-        ) AS taxinfo
+        COALESCE(json_agg(
+            CASE 
+                WHEN t.property_id IS NOT NULL THEN
+                    json_build_object(
+                        'tax_id', t._id,
+                        'property_id', t.property_id,
+                        'finalLevies', t.finalLevies,
+                        'lessInterimBilling', t.lessInterimBilling,
+                        'totalAmountDue', t.totalAmountDue,
+                        'dueDate', t.dueDate
+                    )
+                ELSE NULL
+            END
+        ) FILTER (WHERE t.property_id IS NOT NULL), '[]') AS taxinfo
       FROM "Propertie" p
       LEFT JOIN "Taxe" t ON t.property_id = p._id
       WHERE p.owner_id = $1
       GROUP BY p._id
-    `, [userId]); // Pass userId as a parameter to avoid SQL injection
+    `;
 
-    if (properties.rows.length === 0) {
-      return res.status(404).json({ message: 'Property not found for this user' });
+    const { rows } = await pool.query(query, [userId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No properties found for this user' });
     }
 
-    res.json(properties.rows[0]); // Send the first property as response
+    res.json(rows); // Return all matching properties
   } catch (error) {
-    console.error('Error fetching property:', error);
-    res.status(500).json({ message: 'Error fetching property', error });
+    console.error('Error fetching properties:', error);
+    res.status(500).json({ message: 'Error fetching properties', error });
   }
 });
+
 
 
 app.get('/taxes', async (req, res) =>{
@@ -148,6 +186,83 @@ app.get('/notification', (req, res) => {
   
   main().catch(console.error);
 });
+
+// User registration route
+app.post('/api/users/register', async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  // Ensure all required fields are present
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    // Hash the password for security
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert the user into the database
+    const pool = await getPool();
+    const result = await pool.query(
+      `INSERT INTO "User" (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, email, hashedPassword, role]
+    );
+
+    // Respond with the created user (excluding the password)
+    const { password: _, ...userWithoutPassword } = result.rows[0];
+    res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
+  } catch (error) {
+    console.error('Error saving user to database:', error);
+    res.status(500).json({ message: 'Error saving user to database', error });
+  }
+});
+
+// User login route
+app.post('/api/users/login', async (req, res) => {
+  const { email, password } = req.body;
+
+
+  if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  try {
+      const pool = await getPool();
+      const userQuery = await pool.query(
+          `SELECT * FROM "User" WHERE email = $1`,
+          [email]
+      );
+
+      if (userQuery.rows.length === 0) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      const user = userQuery.rows[0];
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordMatch) {
+          return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user._id, name: user.name, email: user.email, role: user.role },
+        "your-secret-key", // Replace with `process.env.JWT_SECRET` in production
+        { expiresIn: "1h" }
+    );
+      res.cookie("token", token, { httpOnly: true });
+      res.status(200).json({ message: "Sign-in successful", token });
+  } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ message: "Error during login", error });
+  }
+});
+
+// User logout route
+app.post('/api/users/logout', (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
+});
+
+
 
 // Start server
 app.listen(PORT, () => {

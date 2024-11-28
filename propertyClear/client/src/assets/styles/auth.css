@@ -1,0 +1,42 @@
+.signIn_component{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 500px;
+}
+
+.signIn_component h2{
+    margin-bottom: 100px;
+}
+
+input{
+    padding: 10px;
+    margin: 10px;
+}
+
+.signIn_component button{
+    background-color: #0095ff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    box-shadow: rgba(255, 255, 255, .4) 0 1px 0 0 inset;
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    padding: 8px .8em;
+    font-size: 18px;
+}
+
+.signIn_component button:hover{
+    background-color: #07c;
+}
+
+.signIn_component button:focus{
+    box-shadow: 0 0 0 4px rgba(0, 149, 255, .15);
+}
+
+.signIn_component button:active{
+    background-color: #0064bd;
+    box-shadow: none;
+}

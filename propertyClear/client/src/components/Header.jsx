@@ -11,12 +11,13 @@ const Header = () => {
 
             <div className="navigation">
                 <Link to="/search"><p>Search</p></Link>
-                <Link to="/myProperty"><p>My Properties</p></Link>
+                <Link to="/owner"><p>My Properties</p></Link>
                 <Link to="/account"><p>Account</p></Link>
                 <Link to="/help"><p>Help</p></Link>
                 <button>
-                    <Link to=""><p>Sign In</p></Link>
+                    <Link to="/signup"><p>Sign Up</p></Link>
                 </button>
+                <Link to="/" onClick={() => localStorage.removeItem('authToken')}>Sign Out</Link>
             </div>
         </div>
     )
