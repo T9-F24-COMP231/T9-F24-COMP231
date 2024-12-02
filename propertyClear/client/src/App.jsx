@@ -21,26 +21,22 @@ import Account from './components/Account';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState(null);
+  const {setRole} = useState(null);
   // Check if the user is authenticated using cookies or localStorage
   useEffect(() => {
-    // Decode the JWT token and get user role
     const token = localStorage.getItem('authToken');
     if (token) {
-      setIsAuthenticated(true);
-      const decodedToken = jwtDecode(token);
-      setRole(decodedToken.role); // Assuming `role` is provided in the token
+        try {
+            const decodedToken = jwtDecode(token);
+            setIsAuthenticated(true);
+            setRole(decodedToken.role);
+        } catch (error) {
+            console.error("Invalid token:", error);
+            localStorage.removeItem('authToken');
+        }
     }
-  }, []);
+}, [setIsAuthenticated, setRole]);
 
-
-  const renderDashboard = () => {
-    if (role === 1) return <Navigate to="/owner" />;
-    if (role === 2) return <Navigate to="/investor" />;
-    if (role === 3) return <Navigate to="/broker" />;
-    if (role === 4) return <Navigate to="/realEstate" />;
-    return <Navigate to="/" />;
-  };
 
 
   return (
@@ -49,16 +45,13 @@ function App() {
         <Header />
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<SignIn />} />
+          <Route path="/" element={<SignIn setAuth={setIsAuthenticated} />} />
           <Route path="/signup" element={<SignUp />} />
-
-          {/* Redirect user to their dashboard based on role */}
-          <Route path="/dashboard" element={isAuthenticated ? renderDashboard() : <Navigate to="/" />} />
-          <Route path="/account" element={isAuthenticated ? <Account /> : <Navigate to="/" />} />
 
           {/* Protected Routes */}
           {isAuthenticated && (
             <>
+              <Route path="/account" element={<Account />} />
               <Route path="/search" element={<Main />} />
               <Route path="/owner" element={<Owner />} />
               <Route path="/realEstate" element={<Agent />} />
@@ -66,8 +59,8 @@ function App() {
             </>
           )}
 
-          {/* Redirect to SignIn if the user is not authenticated */}
-          {!isAuthenticated && <Route path="*" element={<Navigate to="/" />} />}
+          {/* Redirect unauthenticated users */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <Footer />
       </Router>
