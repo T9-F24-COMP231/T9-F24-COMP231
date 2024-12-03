@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 5001;
 
 app.use(cors({
   origin: 'http://localhost:3000', // Your React app's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -52,9 +52,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/users', async (req, res) => {
+  // console.log('users endpoint');
   const pool = await getPool();
   let users = await pool.query(`SELECT * FROM "User"`);
-  console.log(users);
+  // console.log(users);
   res.json(users);
 });
 
@@ -63,8 +64,60 @@ app.get('/properties', async (req, res) => {
   let properties = await pool.query(`
     SELECT * FROM "Propertie"
     `);
-  console.log(properties);
+  // console.log(properties);
   res.json(properties.rows);
+});
+
+app.get('/account', authenticateToken, async (req, res) => {
+  console.log(req.user.id);
+  const pool = await getPool();
+  let loggedInUser = await pool.query(`
+    SELECT receive_emails FROM "User" WHERE _id = '${req.user.id}'
+    `);
+  // console.log(loggedInUser);
+  res.json(loggedInUser.rows);
+});
+
+app.patch('/account/update', authenticateToken, async (req, res) => {
+  // console.log(req.user.id);
+  // console.log(req.body.receive_emails);
+
+  const userPreference = req.body.receive_emails;
+
+  const pool = await getPool();
+  await pool.query(`
+    UPDATE "User" SET receive_emails = '${userPreference}' WHERE _id = '${req.user.id}';
+  `);
+
+  if(userPreference == 'YES') {
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: config.gmailUsername,
+        pass: config.gmailPassword,
+      },
+    });
+
+    const mailOptions = {
+      from: "noreply@propertyclear.com",
+      to: "rthchldshynee@gmail.com",
+      subject: "PropertyClear email alerts subscribed",
+      text: "You will now get email alerts from propertyClear.",
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email: ", error);
+      } else {
+        console.log("Email sent: ", info.response);
+      }
+    });    
+  }
+
+  res.json({});
 });
 
 // propertiesSecure - is ONLY FOR REAL ESTATE AGENT, INVESTOR AND BROCKER
@@ -88,7 +141,7 @@ FROM "Propertie" p
 LEFT JOIN "Taxe" t ON t.property_id = p._id
 GROUP BY p._id
     `);
-  console.log(properties);
+  // console.log(properties);
   res.json(properties.rows);
 });
 
@@ -144,17 +197,15 @@ app.get('/propertiesSecure/owner', async (req, res) => {
 app.get('/taxes', async (req, res) =>{
   const pool = await getPool();
   let taxes = await pool.query('SELECT * FROM "Taxe"');
-  console.log(taxes);
+  // console.log(taxes);
   res.json(taxes.rows);
 });
 
-app.get('/notification', (req, res) => {
+app.get('/notification', (req, res) => { 
   
   // async..await is not allowed in global scope, must use a wrapper
   async function main() {
     // send mail with defined transport object
-
-    console.log('barrrrrrr', JSON.stringify(config));
 
     const transporter = nodemailer.createTransport({
       service: "Gmail",
