@@ -17,25 +17,26 @@ import Owner from './components/HomeOwnerDash';
 import SignIn from './signIn';
 import SignUp from './signUp';
 import Account from './components/Account';
+import Help from './components/Help';
 //import TestFirebase from './testFirebase';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const {setRole} = useState(null);
+  const { setRole } = useState(null);
   // Check if the user is authenticated using cookies or localStorage
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
-        try {
-            const decodedToken = jwtDecode(token);
-            setIsAuthenticated(true);
-            setRole(decodedToken.role);
-        } catch (error) {
-            console.error("Invalid token:", error);
-            localStorage.removeItem('authToken');
-        }
+      try {
+        const decodedToken = jwtDecode(token);
+        setIsAuthenticated(true);
+        setRole(decodedToken.role);
+      } catch (error) {
+        console.error("Invalid token:", error);
+        localStorage.removeItem('authToken');
+      }
     }
-}, [setIsAuthenticated, setRole]);
+  }, [setIsAuthenticated, setRole]);
 
 
 
@@ -52,6 +53,7 @@ function App() {
           {isAuthenticated && (
             <>
               <Route path="/account" element={<Account />} />
+              <Route path="/help" element={<Help />} />
               <Route path="/search" element={<Main />} />
               <Route path="/owner" element={<Owner />} />
               <Route path="/realEstate" element={<Agent />} />
