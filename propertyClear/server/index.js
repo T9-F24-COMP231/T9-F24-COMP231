@@ -14,9 +14,6 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 
-
-
-
 // Middleware
 
 app.use(cors({
@@ -319,3 +316,77 @@ app.post('/api/users/logout', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+//Here is reporting section
+
+//Investor
+const generateReport = async () => {
+  try {
+    const response = await fetch('http://localhost:5001/api/generate-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ properties }),
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      // Open the report in a new tab
+      window.open(result.filePath, '_blank');
+    } else {
+      alert('Failed to generate report');
+    }
+  } catch (error) {
+    console.error('Error generating report:', error);
+  }
+};
+
+//Here is report generating
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+
+// Endpoint for generating a report
+app.post('/api/generate-report', (req, res) => {
+    const { properties } = req.body;
+
+    // Create a PDF document
+    const doc = new PDFDocument();
+    const fileName = `report-${Date.now()}.pdf`;
+    const filePath = `./reports/${fileName}`;
+
+    // Ensure "reports" directory exists
+    if (!fs.existsSync('./reports')) {
+        fs.mkdirSync('./reports');
+    }
+
+    const writeStream = fs.createWriteStream(filePath);
+    doc.pipe(writeStream);
+
+    // Add content to the PDF
+    doc.fontSize(16).text('Client/Property Report', { align: 'center' });
+    doc.moveDown();
+
+    properties.forEach((property, index) => {
+        doc.fontSize(12).text(`Property ${index + 1}:`);
+        doc.text(`Property ID: ${property._id}`);
+        doc.text(`Address: ${property.address}`);
+        doc.text(`Owner ID: ${property.owner_id}`);
+        doc.moveDown();
+    });
+
+    doc.end();
+
+    writeStream.on('finish', () => {
+        res.json({ success: true, filePath: `http://localhost:5001/reports/${fileName}` });
+    });
+
+    writeStream.on('error', (err) => {
+        console.error(err);
+        res.status(500).json({ success: false, error: 'Failed to generate report' });
+    });
+});
+
+// Serve static files for reports
+app.use('/reports', express.static('reports'));

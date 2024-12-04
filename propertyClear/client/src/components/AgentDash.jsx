@@ -31,13 +31,42 @@ const Agent = () => {
     fetchProperties();
   }, []);
 
+  // Function to handle report generation
+  const generateReport = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ properties }), // Send properties state in the request body
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Open the report in a new tab
+        window.open(result.filePath, '_blank');
+      } else {
+        alert('Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+    }
+  };
+
   return (
     <div className="agent_component">
       <h2>Real Estate Agent - Property Data</h2>
       {isLoading ? (
         <div>Loading...</div>
       ) : (
-        <PropertyTable properties={properties} />
+        <>
+          <PropertyTable properties={properties} />
+          {/* Add the button after the table */}
+          <button onClick={generateReport} className="generate-report-button">
+            Generate Report
+          </button>
+        </>
       )}
     </div>
   );
@@ -121,4 +150,5 @@ const PropertyTable = ({ properties }) => (
     </tbody>
   </table>
 );
-export default Agent
+
+export default Agent;
