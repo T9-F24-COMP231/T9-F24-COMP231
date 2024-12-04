@@ -18,6 +18,7 @@ import SignIn from './signIn';
 import SignUp from './signUp';
 import Account from './components/Account';
 import Help from './components/Help';
+import Admin from './components/Admin';
 //import TestFirebase from './testFirebase';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
               <Route path="/owner" element={<Owner />} />
               <Route path="/realEstate" element={<Agent />} />
               <Route path="/investor" element={<Investor />} />
+              <Route path="/admin" element={<Admin />} />
             </>
           )}
 
