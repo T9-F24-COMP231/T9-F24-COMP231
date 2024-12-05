@@ -59,7 +59,28 @@ const Help = () => {
     // Create Survey Model
     const survey = new Model(surveyJson);
 
+    // Event: Handle survey completion
+    survey.onComplete.add((sender) => {
+        const surveyData = sender.data;
 
+        fetch("http://localhost:5001/api/surveys", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                full_name: surveyData.question1,
+                email: surveyData.question2,
+                date_of_birth: surveyData.question3,
+                role: surveyData.question4,
+                technical_problem: surveyData.question5,
+            }),
+        }).then((response) => {
+            if (response.ok) {
+                alert("Survey submitted successfully!");
+            } else {
+                alert("Failed to submit survey. Please try again later.");
+            }
+        });
+    });
 
     return (
         <div className="form_component">

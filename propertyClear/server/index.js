@@ -49,11 +49,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/users', async (req, res) => {
-  // console.log('users endpoint');
+  console.log('users endpoint');
   const pool = await getPool();
   let users = await pool.query(`SELECT * FROM "User"`);
   // console.log(users);
-  res.json(users);
+  res.json(users.rows);
 });
 
 app.get('/properties', async (req, res) => {
@@ -73,6 +73,24 @@ app.get('/account', authenticateToken, async (req, res) => {
     `);
   // console.log(loggedInUser);
   res.json(loggedInUser.rows);
+});
+
+app.patch('/deactivateUser', authenticateToken, async (req, res) => {
+  // console.log(req.user.id);
+  // console.log(req.body.receive_emails);
+
+  console.log('444', req.body);
+
+  const userStatus = req.body.userStatus;
+
+  console.log('333', userStatus);
+
+  const pool = await getPool();
+  await pool.query(`
+    UPDATE "User" SET deactivated = '${userStatus}' WHERE _id = '${req.user.id}';
+  `);
+
+  res.json({});
 });
 
 app.patch('/account/update', authenticateToken, async (req, res) => {
@@ -310,6 +328,35 @@ app.post('/api/users/logout', (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
+app.post('/api/surveys', async (req, res) => {
+  const { full_name, email, date_of_birth, role, technical_problem } = req.body;
+
+  // Validate required fields
+  if (!full_name || !email || !date_of_birth || !role || !technical_problem) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const pool = await getPool();
+
+    const query = `
+      INSERT INTO surveys (full_name, email, date_of_birth, role, technical_problem)
+      VALUES ($1, $2, $3, $4, $5) RETURNING *;
+    `;
+
+    const values = [full_name, email, date_of_birth, role, technical_problem];
+
+    const result = await pool.query(query, values);
+
+    res.status(201).json({
+      message: "Survey submitted successfully",
+      survey: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error saving survey:", error);
+    res.status(500).json({ message: "Failed to save survey data", error });
+  }
+});
 
 
 // Start server
@@ -344,8 +391,8 @@ const generateReport = async () => {
 };
 
 //Here is report generating
-const PDFDocument = import('pdfkit');
-const fs = import('fs');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 // Endpoint for generating a report
 app.post('/api/generate-report', (req, res) => {
