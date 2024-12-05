@@ -328,6 +328,35 @@ app.post('/api/users/logout', (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
+app.post('/api/surveys', async (req, res) => {
+  const { full_name, email, date_of_birth, role, technical_problem } = req.body;
+
+  // Validate required fields
+  if (!full_name || !email || !date_of_birth || !role || !technical_problem) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const pool = await getPool();
+
+    const query = `
+      INSERT INTO surveys (full_name, email, date_of_birth, role, technical_problem)
+      VALUES ($1, $2, $3, $4, $5) RETURNING *;
+    `;
+
+    const values = [full_name, email, date_of_birth, role, technical_problem];
+
+    const result = await pool.query(query, values);
+
+    res.status(201).json({
+      message: "Survey submitted successfully",
+      survey: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error saving survey:", error);
+    res.status(500).json({ message: "Failed to save survey data", error });
+  }
+});
 
 
 // Start server
