@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../assets/styles/table.css";
 
-
 const Investor = () => {
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,19 +31,48 @@ const Investor = () => {
     fetchProperties();
   }, []);
 
+  // Report generation function inside the component
+  const generateReport = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ properties }), // Send properties in the request body
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Open the report in a new tab
+        window.open(result.filePath, '_blank');
+      } else {
+        alert('Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+    }
+  };
+
   return (
     <div className="investor_component">
       <h2>Investor - Property Data</h2>
       {isLoading ? (
         <div>Loading...</div>
       ) : (
-        <PropertyTable properties={properties} />
+        <>
+          <PropertyTable properties={properties} />
+          {/* Add the button here */}
+          <button onClick={generateReport} className="generate-report-button">
+            Generate Report
+          </button>
+        </>
       )}
     </div>
   );
 };
 
-
+// Table to display property data
 const PropertyTable = ({ properties }) => (
   <table>
     <thead>
@@ -124,4 +152,4 @@ const PropertyTable = ({ properties }) => (
   </table>
 );
 
-export default Investor
+export default Investor;
