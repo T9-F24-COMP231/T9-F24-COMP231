@@ -10,6 +10,10 @@ import cors from 'cors';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+//Here is report generating
+const PDFDocument = import('pdfkit');
+const fs = import('fs');
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
