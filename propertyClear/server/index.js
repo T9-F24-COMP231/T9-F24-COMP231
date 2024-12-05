@@ -49,11 +49,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/users', async (req, res) => {
-  // console.log('users endpoint');
+  console.log('users endpoint');
   const pool = await getPool();
   let users = await pool.query(`SELECT * FROM "User"`);
   // console.log(users);
-  res.json(users);
+  res.json(users.rows);
 });
 
 app.get('/properties', async (req, res) => {
@@ -73,6 +73,24 @@ app.get('/account', authenticateToken, async (req, res) => {
     `);
   // console.log(loggedInUser);
   res.json(loggedInUser.rows);
+});
+
+app.patch('/deactivateUser', authenticateToken, async (req, res) => {
+  // console.log(req.user.id);
+  // console.log(req.body.receive_emails);
+
+  console.log('444', req.body);
+
+  const userStatus = req.body.userStatus;
+
+  console.log('333', userStatus);
+
+  const pool = await getPool();
+  await pool.query(`
+    UPDATE "User" SET deactivated = '${userStatus}' WHERE _id = '${req.user.id}';
+  `);
+
+  res.json({});
 });
 
 app.patch('/account/update', authenticateToken, async (req, res) => {
