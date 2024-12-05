@@ -391,8 +391,8 @@ const generateReport = async () => {
 };
 
 //Here is report generating
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
+const PDFDocument = import('pdfkit');
+const fs = import('fs');
 
 // Endpoint for generating a report
 app.post('/api/generate-report', (req, res) => {
