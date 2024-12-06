@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "../assets/styles/form.css";
 
 const SharedForm = () => {
   const [userType, setUserType] = useState("agent"); // Default user type
@@ -12,7 +11,7 @@ const SharedForm = () => {
     propertyPrice: "",
     additionalInfo: "",
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState(null);
 

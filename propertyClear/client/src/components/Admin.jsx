@@ -27,11 +27,11 @@ const Admin = () => {
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                
+
                 const data = await response.json();
                 console.log(data);
                 setUsers(data);
@@ -49,7 +49,7 @@ const Admin = () => {
         try {
             const token = localStorage.getItem('authToken');
             const newStatus = currentStatus === 'YES' ? 'NO' : 'YES';
-            
+
             const response = await fetch(`http://localhost:5001/deactivateUser`, {
                 method: 'PATCH',
                 headers: {
@@ -58,11 +58,11 @@ const Admin = () => {
                 },
                 body: JSON.stringify({ userStatus: newStatus })
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Failed to ${newStatus === 'YES' ? 'deactivate' : 'reactivate'} user`);
             }
-    
+
             // After successful update, fetch fresh user list
             const refreshResponse = await fetch('http://localhost:5001/users', {
                 method: 'GET',
@@ -71,14 +71,14 @@ const Admin = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
+
             if (!refreshResponse.ok) {
                 throw new Error('Failed to refresh user list');
             }
-            
+
             const updatedUsers = await refreshResponse.json();
             setUsers(Array.isArray(updatedUsers) ? updatedUsers : []);
-            
+
         } catch (error) {
             console.error('Error updating user status:', error);
             alert(`Failed to ${currentStatus === 'YES' ? 'reactivate' : 'deactivate'} user. Please try again.`);
@@ -174,11 +174,10 @@ const Admin = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <button
                                                 onClick={() => handleDeactivateStatus(user.deactivated)}
-                                                className={`${
-                                                    user.deactivated === 'YES' 
-                                                        ? 'bg-green-500 hover:bg-green-600' 
-                                                        : 'bg-red-500 hover:bg-red-600'
-                                                } text-white px-4 py-2 rounded`}
+                                                className={`${user.deactivated === 'YES'
+                                                    ? 'bg-green-500 hover:bg-green-600'
+                                                    : 'bg-red-500 hover:bg-red-600'
+                                                    } text-white px-4 py-2 rounded`}
                                             >
                                                 {user.deactivated === 'YES' ? 'Reactivate User' : 'Deactivate User'}
                                             </button>

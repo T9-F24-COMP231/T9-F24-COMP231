@@ -17,19 +17,19 @@ const SignIn = ({ setAuth }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
-    
+
             const result = await response.json();
             if (response.ok) {
                 if (result.token) {
                     localStorage.setItem("authToken", result.token);
-    
+
                     // Decode the token to extract user role
                     const decodedToken = jwtDecode(result.token);
-    
+
                     // Update state immediately
                     setAuth(true);
                     navigate(getDashboardRoute(decodedToken.role)); // Navigate directly
-    
+
                     console.log(`Logged in as role: ${decodedToken.role}`);
                 }
             } else {
@@ -40,7 +40,7 @@ const SignIn = ({ setAuth }) => {
             alert("An error occurred. Please try again.");
         }
     };
-    
+
     // Helper function for role-based navigation
     const getDashboardRoute = (role) => {
         switch (role) {
@@ -51,7 +51,7 @@ const SignIn = ({ setAuth }) => {
             default: return "/";
         }
     };
-    
+
 
     return (
         <div className="signIn_component">

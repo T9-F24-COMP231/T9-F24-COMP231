@@ -14,11 +14,11 @@ const Main = () => {
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                
+
                 const data = await response.json();
                 setProperties(data);
                 setIsLoading(false);
@@ -41,7 +41,7 @@ const Main = () => {
                 <h1 className="text-3xl font-bold text-gray-800">Property Dashboard</h1>
                 <p className="text-gray-600 mt-2">Manage and search your property listings</p>
             </div>
-            
+
             <div className="search-container">
                 <div className="search-wrapper">
                     <span className="search-icon">🔍</span>
@@ -64,7 +64,7 @@ const Main = () => {
                         </span>
                     )}
                 </div>
-                
+
                 {isLoading ? (
                     <div className="loading-state">
                         <div className="loading-spinner"></div>

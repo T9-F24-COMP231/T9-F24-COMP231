@@ -2,7 +2,7 @@ import React from "react";
 import "../assets/styles/header_footer.css";
 
 const Footer = () => {
-    return(
+    return (
         <div className="footer_content">
             <div>
                 <p>&copy; 2024 PropertyClear</p>

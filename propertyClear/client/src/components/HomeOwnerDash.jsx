@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
-
-import "../assets/styles/owner.css";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 
@@ -21,23 +19,23 @@ const Owner = () => {
                 const token = localStorage.getItem("authToken");
                 const decodedToken = jwtDecode(token);
                 const userId = decodedToken.id;
-        
+
                 console.log("Decoded Token:", decodedToken);
                 console.log("Extracted User ID:", userId);
-        
+
                 const response = await fetch(`http://localhost:5001/propertiesSecure/owner`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-        
+
                 if (!response.ok) {
                     throw new Error("Failed to fetch property");
                 }
-        
+
                 const data = await response.json();
                 console.log("Fetched property data:", data);
-        
+
                 // Ensure data[0] exists before accessing
                 if (data && data.length > 0) {
                     setProperty(data[0]); // Extract the first property object
@@ -51,7 +49,7 @@ const Owner = () => {
                 setIsLoading(false);
             }
         };
-        
+
 
         fetchProperty();
     }, [location]);

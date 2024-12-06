@@ -12,7 +12,6 @@ const Account = () => {
       setUser(decoded);
     }
 
-    // Fetch the user's alert preferences
     const fetchAlertPreference = async () => {
       try {
         const response = await fetch("http://localhost:5001/account", {
@@ -20,7 +19,7 @@ const Account = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch alert preferences');
         }
@@ -54,15 +53,11 @@ const Account = () => {
 
       if (!response.ok) {
         throw new Error('Failed to update alert preferences');
-        // If the update fails, we might want to revert the checkbox
-        // setReceiveAlerts(!newValue);
-      }
 
-      // If successful, update the state
+      }
       setReceiveAlerts(newValue);
     } catch (error) {
       console.error('Error updating alert preferences:', error);
-      // Revert the checkbox state if there's an error
       setReceiveAlerts(!newValue);
     }
   };
@@ -76,8 +71,8 @@ const Account = () => {
       <p><strong>Password:</strong> ******** (hidden for security)</p>
       <p>
         <strong>Receive alert emails?:</strong>
-        <input 
-          type="checkbox" 
+        <input
+          type="checkbox"
           checked={receiveAlerts ?? false}
           onChange={handleAlertToggle}
         />
