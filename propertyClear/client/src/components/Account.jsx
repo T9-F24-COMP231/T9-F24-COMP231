@@ -48,7 +48,10 @@ const Account = () => {
         })
       });
 
-      if (!response.ok) throw new Error('Failed to update alert preferences');
+      if (!response.ok) {
+        throw new Error('Failed to update alert preferences');
+
+      }
       setReceiveAlerts(newValue);
     } catch (error) {
       console.error('Error updating alert preferences:', error);

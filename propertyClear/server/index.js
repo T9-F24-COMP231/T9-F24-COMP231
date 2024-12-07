@@ -1,17 +1,15 @@
 import config from './config/config.js';
 import { getPool } from './config/db.js';
-
 import express from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 //Here is report generating
-import PDFDocument  from 'pdfkit';
+import PDFDocument from 'pdfkit';
 import fs from 'fs';
 
 const app = express();
@@ -35,11 +33,11 @@ const authenticateToken = (req, res, next) => {
   if (!token) return res.status(401).json({ message: "Access denied, no token provided" });
 
   try {
-      const decoded = jwt.verify(token, "your-secret-key");
-      req.user = decoded; // Attach decoded token to the request
-      next(); // Proceed to the next middleware or route handler
+    const decoded = jwt.verify(token, "your-secret-key");
+    req.user = decoded; // Attach decoded token to the request
+    next(); // Proceed to the next middleware or route handler
   } catch (error) {
-      res.status(403).json({ message: "Invalid or expired token" });
+    res.status(403).json({ message: "Invalid or expired token" });
   }
 };
 
@@ -56,7 +54,6 @@ app.get('/users', async (req, res) => {
   console.log('users endpoint');
   const pool = await getPool();
   let users = await pool.query(`SELECT * FROM "User"`);
-  // console.log(users);
   res.json(users.rows);
 });
 
@@ -65,7 +62,6 @@ app.get('/properties', async (req, res) => {
   let properties = await pool.query(`
     SELECT * FROM "Propertie"
     `);
-  // console.log(properties);
   res.json(properties.rows);
 });
 
@@ -75,20 +71,13 @@ app.get('/account', authenticateToken, async (req, res) => {
   let loggedInUser = await pool.query(`
     SELECT receive_emails FROM "User" WHERE _id = '${req.user.id}'
     `);
-  // console.log(loggedInUser);
   res.json(loggedInUser.rows);
 });
 
 app.patch('/deactivateUser', authenticateToken, async (req, res) => {
-  // console.log(req.user.id);
-  // console.log(req.body.receive_emails);
-
   console.log('444', req.body);
-
   const userStatus = req.body.userStatus;
-
   console.log('333', userStatus);
-
   const pool = await getPool();
   await pool.query(`
     UPDATE "User" SET deactivated = '${userStatus}' WHERE _id = '${req.user.id}';
@@ -98,17 +87,14 @@ app.patch('/deactivateUser', authenticateToken, async (req, res) => {
 });
 
 app.patch('/account/update', authenticateToken, async (req, res) => {
-  // console.log(req.user.id);
-  // console.log(req.body.receive_emails);
-
   const userPreference = req.body.receive_emails;
-
   const pool = await getPool();
+
   await pool.query(`
     UPDATE "User" SET receive_emails = '${userPreference}' WHERE _id = '${req.user.id}';
   `);
 
-  if(userPreference == 'YES') {
+  if (userPreference == 'YES') {
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       host: "smtp.gmail.com",
@@ -133,7 +119,7 @@ app.patch('/account/update', authenticateToken, async (req, res) => {
       } else {
         console.log("Email sent: ", info.response);
       }
-    });    
+    });
   }
 
   res.json({});
@@ -160,7 +146,6 @@ FROM "Propertie" p
 LEFT JOIN "Taxe" t ON t.property_id = p._id
 GROUP BY p._id
     `);
-  // console.log(properties);
   res.json(properties.rows);
 });
 
@@ -213,15 +198,15 @@ app.get('/propertiesSecure/owner', async (req, res) => {
 
 
 
-app.get('/taxes', async (req, res) =>{
+app.get('/taxes', async (req, res) => {
   const pool = await getPool();
   let taxes = await pool.query('SELECT * FROM "Taxe"');
   // console.log(taxes);
   res.json(taxes.rows);
 });
 
-app.get('/notification', (req, res) => { 
-  
+app.get('/notification', (req, res) => {
+
   // async..await is not allowed in global scope, must use a wrapper
   async function main() {
     // send mail with defined transport object
@@ -253,7 +238,7 @@ app.get('/notification', (req, res) => {
     });
     // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
   }
-  
+
   main().catch(console.error);
 });
 
@@ -261,7 +246,6 @@ app.get('/notification', (req, res) => {
 app.post('/api/users/register', async (req, res) => {
   const { name, email, password, role } = req.body;
 
-  // Ensure all required fields are present
   if (!name || !email || !password || !role) {
     return res.status(400).json({ message: 'All fields are required' });
   }
@@ -292,37 +276,37 @@ app.post('/api/users/login', async (req, res) => {
 
 
   if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+    return res.status(400).json({ message: "Email and password are required" });
   }
 
   try {
-      const pool = await getPool();
-      const userQuery = await pool.query(
-          `SELECT * FROM "User" WHERE email = $1`,
-          [email]
-      );
-
-      if (userQuery.rows.length === 0) {
-          return res.status(404).json({ message: "User not found" });
-      }
-
-      const user = userQuery.rows[0];
-      const isPasswordMatch = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordMatch) {
-          return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const token = jwt.sign(
-        { id: user._id, name: user.name, email: user.email, role: user.role },
-        "your-secret-key", // Replace with `process.env.JWT_SECRET` in production
-        { expiresIn: "1h" }
+    const pool = await getPool();
+    const userQuery = await pool.query(
+      `SELECT * FROM "User" WHERE email = $1`,
+      [email]
     );
-      res.cookie("token", token, { httpOnly: true });
-      res.status(200).json({ message: "Sign-in successful", token });
+
+    if (userQuery.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userQuery.rows[0];
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email, role: user.role },
+      "your-secret-key", // Replace with `process.env.JWT_SECRET` in production
+      { expiresIn: "1h" }
+    );
+    res.cookie("token", token, { httpOnly: true });
+    res.status(200).json({ message: "Sign-in successful", token });
   } catch (error) {
-      console.error("Error during login:", error);
-      res.status(500).json({ message: "Error during login", error });
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "Error during login", error });
   }
 });
 
@@ -342,14 +326,11 @@ app.post('/api/surveys', async (req, res) => {
 
   try {
     const pool = await getPool();
-
     const query = `
       INSERT INTO surveys (full_name, email, date_of_birth, role, technical_problem)
       VALUES ($1, $2, $3, $4, $5) RETURNING *;
     `;
-
     const values = [full_name, email, date_of_birth, role, technical_problem];
-
     const result = await pool.query(query, values);
 
     res.status(201).json({
@@ -396,43 +377,43 @@ const generateReport = async () => {
 
 // Endpoint for generating a report
 app.post('/api/generate-report', (req, res) => {
-    const { properties } = req.body;
+  const { properties } = req.body;
 
-    // Create a PDF document
-    const doc = new PDFDocument();
-    const fileName = `report-${Date.now()}.pdf`;
-    const filePath = `./reports/${fileName}`;
+  // Create a PDF document
+  const doc = new PDFDocument();
+  const fileName = `report-${Date.now()}.pdf`;
+  const filePath = `./reports/${fileName}`;
 
-    // Ensure "reports" directory exists
-    if (!fs.existsSync('./reports')) {
-        fs.mkdirSync('./reports');
-    }
+  // Ensure "reports" directory exists
+  if (!fs.existsSync('./reports')) {
+    fs.mkdirSync('./reports');
+  }
 
-    const writeStream = fs.createWriteStream(filePath);
-    doc.pipe(writeStream);
+  const writeStream = fs.createWriteStream(filePath);
+  doc.pipe(writeStream);
 
-    // Add content to the PDF
-    doc.fontSize(16).text('Client/Property Report', { align: 'center' });
+  // Add content to the PDF
+  doc.fontSize(16).text('Client/Property Report', { align: 'center' });
+  doc.moveDown();
+
+  properties.forEach((property, index) => {
+    doc.fontSize(12).text(`Property ${index + 1}:`);
+    doc.text(`Property ID: ${property._id}`);
+    doc.text(`Address: ${property.address}`);
+    doc.text(`Owner ID: ${property.owner_id}`);
     doc.moveDown();
+  });
 
-    properties.forEach((property, index) => {
-        doc.fontSize(12).text(`Property ${index + 1}:`);
-        doc.text(`Property ID: ${property._id}`);
-        doc.text(`Address: ${property.address}`);
-        doc.text(`Owner ID: ${property.owner_id}`);
-        doc.moveDown();
-    });
+  doc.end();
 
-    doc.end();
+  writeStream.on('finish', () => {
+    res.json({ success: true, filePath: `http://localhost:5001/reports/${fileName}` });
+  });
 
-    writeStream.on('finish', () => {
-        res.json({ success: true, filePath: `http://localhost:5001/reports/${fileName}` });
-    });
-
-    writeStream.on('error', (err) => {
-        console.error(err);
-        res.status(500).json({ success: false, error: 'Failed to generate report' });
-    });
+  writeStream.on('error', (err) => {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to generate report' });
+  });
 });
 
 // Serve static files for reports
