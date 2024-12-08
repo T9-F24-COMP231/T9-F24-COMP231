@@ -14,14 +14,6 @@ import PDFDocument from 'pdfkit';
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// SSL options
-const options = {
-  key: fs.readFileSync('./private.key'),
-  cert: fs.readFileSync('./certificate.pem')
-};
-
-// Middleware
-app.options('*', cors())
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -367,6 +359,6 @@ app.post('/api/generate-report', (req, res) => {
 app.use('/reports', express.static('reports'));
 
 // Create HTTPS server only
-https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
+https.createServer(app).listen(PORT, '0.0.0.0', () => {
   console.log(`HTTPS Server running on port ${PORT}`);
 });
