@@ -12,7 +12,7 @@ const SignIn = ({ setAuth }) => {
 
     const handleSignIn = async () => {
         try {
-            const response = await fetch("http://localhost:5001/api/users/login", {
+            const response = await fetch(`${process.env.REACT_APP_APP_URL}/api/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),

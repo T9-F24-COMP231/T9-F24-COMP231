@@ -25,7 +25,7 @@ const Admin = () => {
 
     const fetchUsers = async (token) => {
         try {
-            const response = await fetch('http://localhost:5001/users', {
+            const response = await fetch(`${process.env.REACT_APP_APP_URL}/users`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -49,7 +49,7 @@ const Admin = () => {
         const newStatus = currentStatus === 'YES' ? 'NO' : 'YES';
         
         try {
-            const response = await fetch('http://localhost:5001/deactivateUser', {
+            const response = await fetch(`${process.env.REACT_APP_APP_URL}/deactivateUser`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

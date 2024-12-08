@@ -31,7 +31,7 @@ const SharedForm = () => {
     setSubmissionStatus(null);
 
     try {
-      const response = await fetch("http://localhost:5001/api/submit-property", {
+      const response = await fetch(`${process.env.REACT_APP_APP_URL}/api/submit-property`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

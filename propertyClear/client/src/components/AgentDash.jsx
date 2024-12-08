@@ -8,7 +8,7 @@ const Agent = () => {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:5001/propertiesSecure', {
+        const response = await fetch(`${process.env.REACT_APP_APP_URL}/propertiesSecure`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -34,7 +34,7 @@ const Agent = () => {
   // Function to handle report generation
   const generateReport = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/generate-report', {
+      const response = await fetch(`${process.env.REACT_APP_APP_URL}/api/generate-report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

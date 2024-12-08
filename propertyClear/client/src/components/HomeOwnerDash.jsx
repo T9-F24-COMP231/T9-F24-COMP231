@@ -23,7 +23,7 @@ const Owner = () => {
                 console.log("Decoded Token:", decodedToken);
                 console.log("Extracted User ID:", userId);
 
-                const response = await fetch(`http://localhost:5001/propertiesSecure/owner`, {
+                const response = await fetch(`${process.env.REACT_APP_APP_URL}/propertiesSecure/owner`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

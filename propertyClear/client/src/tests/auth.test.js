@@ -22,7 +22,7 @@ describe("Auth Module", () => {
         const result = await signup("test@example.com", "password123", "Test User", 1);
 
         expect(axios.post).toHaveBeenCalledWith(
-            "http://localhost:5001/api/users/register",
+            `${process.env.REACT_APP_APP_URL}/api/users/register`,
             {
                 email: "test@example.com",
                 password: "password123",

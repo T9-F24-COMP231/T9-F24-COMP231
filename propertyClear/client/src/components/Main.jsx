@@ -8,7 +8,7 @@ const Main = () => {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const response = await fetch('http://localhost:5001/properties', {
+                const response = await fetch(`${process.env.REACT_APP_APP_URL}/properties`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'

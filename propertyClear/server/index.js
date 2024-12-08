@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Your React app's URL
+  origin: process.env.CLIENT_URL, // Your React app's URL
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -355,7 +355,7 @@ app.listen(PORT, () => {
 //Investor
 const generateReport = async () => {
   try {
-    const response = await fetch('http://localhost:5001/api/generate-report', {
+    const response = await fetch(`${process.env.REACT_APP_APP_URL}/api/generate-report`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -407,7 +407,7 @@ app.post('/api/generate-report', (req, res) => {
   doc.end();
 
   writeStream.on('finish', () => {
-    res.json({ success: true, filePath: `http://localhost:5001/reports/${fileName}` });
+    res.json({ success: true, filePath: `${process.env.REACT_APP_APP_URL}/reports/${fileName}` });
   });
 
   writeStream.on('error', (err) => {

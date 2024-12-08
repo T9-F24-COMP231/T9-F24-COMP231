@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5001"; // Your backend server URL
+const API_URL = process.env.REACT_APP_APP_URL; // Your backend server URL
 
 // Sign up function
 const signup = async (email, password, name, roleNumber) => {

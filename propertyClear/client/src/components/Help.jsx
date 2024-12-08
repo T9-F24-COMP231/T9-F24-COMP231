@@ -78,7 +78,7 @@ const Help = () => {
     survey.onComplete.add((sender) => {
         const surveyData = sender.data;
 
-        fetch("http://localhost:5001/api/surveys", {
+        fetch(`${process.env.REACT_APP_APP_URL}/api/surveys`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

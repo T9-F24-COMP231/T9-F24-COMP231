@@ -18,7 +18,7 @@ const Account = () => {
 
   const fetchAlertPreference = async (token) => {
     try {
-      const response = await fetch("http://localhost:5001/account", {
+      const response = await fetch(`${process.env.REACT_APP_APP_URL}/account`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -37,7 +37,7 @@ const Account = () => {
     const token = localStorage.getItem('authToken');
 
     try {
-      const response = await fetch("http://localhost:5001/account/update", {
+      const response = await fetch(`${process.env.REACT_APP_APP_URL}/account/update`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
