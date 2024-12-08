@@ -7,19 +7,23 @@ import nodemailer from 'nodemailer';
 import cors from 'cors';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-//Here is report generating
-import PDFDocument from 'pdfkit';
+import https from 'https';
 import fs from 'fs';
+import PDFDocument from 'pdfkit';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// SSL options
+const options = {
+  key: fs.readFileSync('./private.key'),
+  cert: fs.readFileSync('./certificate.pem')
+};
 
 // Middleware
-
+app.options('*', cors())
 app.use(cors({
-  origin: process.env.CLIENT_URL, // Your React app's URL
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -29,13 +33,13 @@ app.use(cookieParser());
 
 // Define the authenticateToken middleware
 const authenticateToken = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1]; // Extract token from "Bearer {token}"
+  const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Access denied, no token provided" });
 
   try {
     const decoded = jwt.verify(token, "your-secret-key");
-    req.user = decoded; // Attach decoded token to the request
-    next(); // Proceed to the next middleware or route handler
+    req.user = decoded;
+    next();
   } catch (error) {
     res.status(403).json({ message: "Invalid or expired token" });
   }
@@ -45,7 +49,6 @@ app.get('/secure-endpoint', authenticateToken, (req, res) => {
   res.status(200).json({ message: `Hello user with ID ${req.user.id}` });
 });
 
-// Basic test route
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
@@ -125,8 +128,6 @@ app.patch('/account/update', authenticateToken, async (req, res) => {
   res.json({});
 });
 
-// propertiesSecure - is ONLY FOR REAL ESTATE AGENT, INVESTOR AND BROCKER
-
 app.get('/propertiesSecure', async (req, res) => {
   const pool = await getPool();
   let properties = await pool.query(`
@@ -157,7 +158,7 @@ app.get('/propertiesSecure/owner', async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, "your-secret-key");
-    const userId = decoded.id; // Assuming the token contains `id` for the user
+    const userId = decoded.id;
     const pool = await getPool();
 
     const query = `
@@ -189,28 +190,21 @@ app.get('/propertiesSecure/owner', async (req, res) => {
       return res.status(404).json({ message: 'No properties found for this user' });
     }
 
-    res.json(rows); // Return all matching properties
+    res.json(rows);
   } catch (error) {
     console.error('Error fetching properties:', error);
     res.status(500).json({ message: 'Error fetching properties', error });
   }
 });
 
-
-
 app.get('/taxes', async (req, res) => {
   const pool = await getPool();
   let taxes = await pool.query('SELECT * FROM "Taxe"');
-  // console.log(taxes);
   res.json(taxes.rows);
 });
 
 app.get('/notification', (req, res) => {
-
-  // async..await is not allowed in global scope, must use a wrapper
   async function main() {
-    // send mail with defined transport object
-
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       host: "smtp.gmail.com",
@@ -236,13 +230,11 @@ app.get('/notification', (req, res) => {
         console.log("Email sent: ", info.response);
       }
     });
-    // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
   }
 
   main().catch(console.error);
 });
 
-// User registration route
 app.post('/api/users/register', async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -251,17 +243,13 @@ app.post('/api/users/register', async (req, res) => {
   }
 
   try {
-    // Hash the password for security
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert the user into the database
     const pool = await getPool();
     const result = await pool.query(
       `INSERT INTO "User" (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *`,
       [name, email, hashedPassword, role]
     );
 
-    // Respond with the created user (excluding the password)
     const { password: _, ...userWithoutPassword } = result.rows[0];
     res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
   } catch (error) {
@@ -270,10 +258,8 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
-// User login route
 app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
-
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
@@ -299,7 +285,7 @@ app.post('/api/users/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email, role: user.role },
-      "your-secret-key", // Replace with `process.env.JWT_SECRET` in production
+      "your-secret-key",
       { expiresIn: "1h" }
     );
     res.cookie("token", token, { httpOnly: true });
@@ -310,7 +296,6 @@ app.post('/api/users/login', async (req, res) => {
   }
 });
 
-// User logout route
 app.post('/api/users/logout', (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logged out successfully" });
@@ -319,7 +304,6 @@ app.post('/api/users/logout', (req, res) => {
 app.post('/api/surveys', async (req, res) => {
   const { full_name, email, date_of_birth, role, technical_problem } = req.body;
 
-  // Validate required fields
   if (!full_name || !email || !date_of_birth || !role || !technical_problem) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -343,48 +327,13 @@ app.post('/api/surveys', async (req, res) => {
   }
 });
 
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-
-//Here is reporting section
-
-//Investor
-const generateReport = async () => {
-  try {
-    const response = await fetch(`${process.env.REACT_APP_APP_URL}/api/generate-report`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ properties }),
-    });
-
-    const result = await response.json();
-    if (result.success) {
-      // Open the report in a new tab
-      window.open(result.filePath, '_blank');
-    } else {
-      alert('Failed to generate report');
-    }
-  } catch (error) {
-    console.error('Error generating report:', error);
-  }
-};
-
-// Endpoint for generating a report
 app.post('/api/generate-report', (req, res) => {
   const { properties } = req.body;
 
-  // Create a PDF document
   const doc = new PDFDocument();
   const fileName = `report-${Date.now()}.pdf`;
   const filePath = `./reports/${fileName}`;
 
-  // Ensure "reports" directory exists
   if (!fs.existsSync('./reports')) {
     fs.mkdirSync('./reports');
   }
@@ -392,7 +341,6 @@ app.post('/api/generate-report', (req, res) => {
   const writeStream = fs.createWriteStream(filePath);
   doc.pipe(writeStream);
 
-  // Add content to the PDF
   doc.fontSize(16).text('Client/Property Report', { align: 'center' });
   doc.moveDown();
 
@@ -416,5 +364,9 @@ app.post('/api/generate-report', (req, res) => {
   });
 });
 
-// Serve static files for reports
 app.use('/reports', express.static('reports'));
+
+// Create HTTPS server only
+https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
+  console.log(`HTTPS Server running on port ${PORT}`);
+});
